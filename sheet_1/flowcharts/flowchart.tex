@@ -105,7 +105,8 @@
   \draw [arrow] (input) -- (process);
   \draw [arrow] (process) -- (process1);
   \draw [arrow] (process1) -- (decision1);
-  \draw [arrow] (decision1) -- (process2);
+  \draw [arrow] (decision1) -- node[right] {True} (process2);
+  \draw [arrow] (decision1) -- node[above] {False} ++(-3.5cm,0) |- (process3);
   \draw [arrow] (process2) -- (process3);
   \draw [arrow] (process3) -- (decision2);
   \draw [arrow] (decision2) -- node[right] {False} (output);
@@ -157,17 +158,19 @@
   \node (start) [startstop] {Begin};
   \node (input) [io, below=of start] {Read $n \in \mathbb{Z}$};
   \node (process) [process, below=of input] {Set $i=1$, $f=1$};
-  \node (process2) [process, below=of process] {$f \leftarrow f \cdot i$};
+  \node (process1) [process, below=of process] {$f \leftarrow f \cdot i$};
+  \node (process2) [process, below=of process1] {$i \leftarrow i+1$};
   \node (decision2) [decision, below=of process2] {$i \leq n$};
   \node (output) [io, below=of decision2] {Print $f$};
   \node (stop) [startstop, below=of output] {End};
   
   \draw [arrow] (start) -- (input);
   \draw [arrow] (input) -- (process);
-  \draw [arrow] (process) -- (process2);
+  \draw [arrow] (process) -- (process1);
+  \draw [arrow] (process1) -- (process2);
   \draw [arrow] (process2) -- (decision2);
   \draw [arrow] (decision2) -- node[right] {False} (output);
-  \draw [arrow] (decision2) -- node[above] {True} ++(3.5cm,0) |- (process2);
+  \draw [arrow] (decision2) -- node[above] {True} ++(3.5cm,0) |- (process1);
   \draw [arrow] (output) -- (stop);
 
 \end{tikzpicture}
