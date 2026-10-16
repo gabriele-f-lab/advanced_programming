@@ -3,19 +3,20 @@
 
 int main(){
 
-	int n = 0, n_div = 0;
+	int n = 0, n_div = 0, prime = 1;
 
 	printf("Insert integer number greater than 1 ");
 	scanf("%d", &n);
 
 	for (int i = 2; i < pow(n, 0.5) + 1; i++) {
-		if (n%i == 0) goto not_prime;
+		if (n%i == 0) {
+			prime = 0;
+			break;	
+		}
 	}
 
-	printf("%d is prime\n", n);
-
-	if (0) {
-		not_prime:
-			printf("%d is not prime\n", n);
-	}
+	if (prime)
+		printf("%d is prime\n", n);
+	else
+		printf("%d is not prime\n", n);
 }
