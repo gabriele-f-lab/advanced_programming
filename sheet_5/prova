@@ -1,0 +1,3 @@
+Write a program that asks the user an integer number for 8 times, that counts the number of digits in
+the input number and that shows the result. The result has to be displayed after each input value. To
+compute the number count, write a function whose prototype is: int count_digits(int n)
