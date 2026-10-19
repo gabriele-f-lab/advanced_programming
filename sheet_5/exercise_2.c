@@ -14,6 +14,13 @@ int main(){
 	}
 }
 
-int count_digits(int n) {
-	return floor(log10(n)) + 1;
+int count_digits(int m) {
+	int i = 0, res;
+
+	do {
+		m = m / 10;
+		i++;
+	} while (m != 0);
+		
+	return i;
 }
