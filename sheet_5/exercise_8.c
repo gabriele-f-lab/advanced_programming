@@ -18,22 +18,22 @@ float min_distance (struct point q[points]);
 
 
 int main(){
-	struct point quadrilater[points], centroid, sorted_quadrilater[points];
+	struct point quadrilateral[points], centroid, sorted_quadrilateral[points];
 	int sorted_list_main[points];
 	float list_angle[points], perimeter;
 
 	for (int i = 0; i < points; i++) {
 		printf("Insert x coordinate of point %d\n", i+1);
-		scanf("%f", &quadrilater[i].x);
+		scanf("%f", &quadrilateral[i].x);
 		printf("Insert y coordinate of point %d\n", i+1);
-		scanf("%f", &quadrilater[i].y);
+		scanf("%f", &quadrilateral[i].y);
 	}
 
-	centroid = compute_center(quadrilater);
+	centroid = compute_center(quadrilateral);
 	printf("%f, %f\n", centroid.x, centroid.y);
 
 	for (int w = 0; w < points; w++){
-		list_angle[w] = compute_angle(quadrilater[w], centroid);
+		list_angle[w] = compute_angle(quadrilateral[w], centroid);
 	}
 	printf("%f\n", list_angle[0]);
 	printf("%f\n", list_angle[1]);
@@ -44,12 +44,12 @@ int main(){
 	printf("%d %d %d %d\n", sorted_list_main[0], sorted_list_main[1], sorted_list_main[2], sorted_list_main[3]);
 
 	for (int p = 0; p < points; p++) {
-		sorted_quadrilater[p] = quadrilater[sorted_list_main[p]];
+		sorted_quadrilateral[p] = quadrilateral[sorted_list_main[p]];
 	}
 
-	printf("Perimeter: %f\n", compute_perimeter(sorted_quadrilater));		
+	printf("Perimeter: %f\n", compute_perimeter(sorted_quadrilateral));		
 	
-	printf("Minimum distance: %f\n", min_distance(quadrilater));		
+	printf("Minimum distance: %f\n", min_distance(quadrilateral));		
 	
 	return 0;
 }
