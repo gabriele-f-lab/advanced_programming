@@ -7,7 +7,7 @@ typedef struct {
 } func_and_der;
 
 func_and_der cubic_eq(float x);
-func_and_der trascendent_eq(float y);
+func_and_der trascendental_eq(float y);
 void newton_method(float vec[], int n, int max_it, float start_p, float stop_p, float prec, func_and_der (*f) (float));
 int sort_vec(float vec[], float prec, int dim);
 
@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
 			newton_method(p, n_step, n_max, p_0_min, p_0_max, precision, cubic_eq);
 			break;
 		case 't':
-			newton_method(p, n_step, n_max, p_0_min, p_0_max, precision, trascendent_eq);
+			newton_method(p, n_step, n_max, p_0_min, p_0_max, precision, trascendental_eq);
 			break;
 		default:
 			printf("No function selected, insert 't' or 'c' \n");
@@ -50,7 +50,7 @@ func_and_der cubic_eq(float x) {
 	return a;
 }
 
-func_and_der trascendent_eq(float y) {
+func_and_der trascendental_eq(float y) {
 	func_and_der b;
 	b.func = exp(y) - 3.*y;
 	b.d_func = exp(y) - 3.;
