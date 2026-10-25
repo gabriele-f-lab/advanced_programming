@@ -2,65 +2,79 @@
 #include <stdlib.h>
 #include <math.h>
 
-float rho_der(float t);
-float var_rho_der(float t);
-void midpoint(float t_end, float step, float *p, float *time, float (*f) (float));
+double rho_der(double t);
+double var_rho_der(double t);
+double rho_analitical(double t);
+double var_rho_analitical(double t);
+void midpoint(int n_step_1, double step, double step_store_1, double *p, double *time, double (*f) (double));
+
+double c_s = 0.02, rho_g = 10., t_g = 1.5;
 
 int main(int argc, char *argv[]) {
 	if (argc == 3) {
-		int n_step;
-		float t_max, t_step, *rho_i, *t_i;
+		int n_step, j, n_step_store;
+		double t_max, t_step, *rho_i, *t_i, step_store = 0.2;
 
-		t_step = atof(argv[1]);
-		t_max = atof(argv[2]);
+		t_step = (double) atof(argv[1]);
+		t_max = (double) atof(argv[2]);
 
 		n_step = (int) floor(t_max / t_step);
-		rho_i = (float *) malloc(n_step * sizeof(float));
-		t_i = (float *) malloc(n_step * sizeof(float));
-
-		midpoint(t_max, t_step, rho_i, t_i, rho_der);
+		n_step_store = (int) floor(t_max / step_store);
 		
-		for (int j = 0; j < n_step; j++) {
-			printf("Rho at time %f: %f\n", t_i[j], rho_i[j]);
+		rho_i = (double *) malloc(n_step_store * sizeof(double));
+		t_i = (double *) malloc(n_step_store * sizeof(double));
+
+		midpoint(n_step, t_step, step_store, rho_i, t_i, rho_der);
+		
+		for (j = 0; j < n_step_store; j++) {
+			printf("Rho at time %lf: %lf, analitical rho: %lf, absolute difference: %lf\n", t_i[j], rho_i[j], rho_analitical(t_i[j]), fabs(rho_i[j] - rho_analitical(t_i[j])));
 		}
 
-		midpoint(t_max, t_step, rho_i, t_i, var_rho_der);
+		midpoint(n_step, t_step, step_store, rho_i, t_i, var_rho_der);
 		
-		for (int j = 0; j < n_step; j++) {
-			printf("Rho at time %f: %f\n", t_i[j], rho_i[j]);
+		for (j = 0; j < n_step_store; j++) {
+			printf("Rho at time %lf: %lf, analitical rho: %lf, absolute difference: %lf\n", t_i[j], rho_i[j], var_rho_analitical(t_i[j]), fabs(rho_i[j] - var_rho_analitical(t_i[j])));
 		}
 
 		free(t_i);
 		free(rho_i);
+
+		return 0;
 	} else {
 		return 0;
 	}
 }
 
-float rho_der(float t) {
-	float c_s = 0.02, rho_g = 10., t_g = 1.5;
-
+double rho_der(double t) {
 	return c_s * rho_g / t_g;
 }
 
-float var_rho_der(float t) {
-	float c_s = 0.02, rho_g = 10., t_g = 1.5;
-
+double rho_analitical(double t) {
 	return c_s * rho_g / t_g * t;
 }
 
-void midpoint(float t_end, float step, float *p, float *time, float (*f) (float)) {
-	float t = 0., k_1, k_2, rho = 0.;
-	int i = 0;
+double var_rho_der(double t) {
+	return c_s * rho_g / t_g * t;
+}
 
-	do {
+double var_rho_analitical(double t) {
+	return c_s * rho_g / t_g * pow(t, 2.) / 2.;
+}
+
+void midpoint(int n_step_1, double step, double step_store_1, double *p, double *time, double (*f) (double)) {
+	double t = 0., k_1, k_2, rho = 0.;
+	int j = 0;
+
+	for (int i = 0; i < n_step_1; i++){
 		k_1 = step * f(t);
 		k_2 = step * f(t + 0.5 * step);
 		rho += k_2;
-		p[i] = rho;
 		t += step;
-		time[i] = t;
-		i++;
 
-	} while (t <= t_end);
+		if (t >= step_store_1 * ((double) j + 1)) {
+			p[j] = rho;
+			time[j] = t;
+			j++;
+		}
+	}
 }

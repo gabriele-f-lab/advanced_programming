@@ -31,6 +31,8 @@ int main() {
 	free(c);
 	free(b);
 	free(a);
+
+	return 0;
 }
 
 void solve(double *a_1, double *b_1, double *c_1, int i, double *sols_1) {
