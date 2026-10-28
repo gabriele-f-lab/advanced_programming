@@ -6,6 +6,8 @@ double rho_der(double t, double rho_g);
 double var_rho_der(double t, double rho_g);
 double rho_analitical(double t);
 double var_rho_analitical(double t);
+double coupled_rho_analitical(double t);
+double coupled_var_rho_analitical(double t);
 void runge_kutta(int n_step_1, int n_step_store_1, double step, double step_store_1, double *p, double *p_4, double *time, double (*f) (double, double));
 void runge_kutta_g_const(int n_step_1, int n_step_store_1, double step, double step_store_1, double *p, double *p_4, double *time, double (*f) (double, double));
 
@@ -28,26 +30,34 @@ int main(int argc, char *argv[]) {
 
 		runge_kutta_g_const(n_step, n_step_store, t_step, step_store, rho_i, rho_i_4, t_i, rho_der);
 		
+		printf("Results with derivative independent of time and constant gas density\n");
+		printf("  time   |   rho_2   |  |error|  |   rho_4   |  |error| \n");
 		for (j = 0; j < n_step_store; j++) {
-			printf("Rho at time %lf: %lf, err: %lf \n", t_i[j], rho_i[j], rho_i[j] - rho_analitical(t_i[j]));
+			printf("%8.6lf | %9.6lf | %9.3e | %9.6lf | %9.3e\n", t_i[j], rho_i[j], fabs(rho_i[j] - rho_analitical(t_i[j])), rho_i_4[j], fabs(rho_i_4[j] - rho_analitical(t_i[j])));
 		}
 
 		runge_kutta_g_const(n_step, n_step_store, t_step, step_store, rho_i, rho_i_4, t_i, var_rho_der);
 		
+		printf("Results with derivative proportional to time and constant gas density\n");
+		printf("  time   |   rho_2   |  |error|  |   rho_4   |  |error| \n");
 		for (j = 0; j < n_step_store; j++) {
-			printf("Rho at time %lf: %lf, err: %lf \n", t_i[j], rho_i[j], rho_i[j] - var_rho_analitical(t_i[j]));
+			printf("%8.6lf | %9.6lf | %9.3e | %9.6lf | %9.3e\n", t_i[j], rho_i[j], fabs(rho_i[j] - var_rho_analitical(t_i[j])), rho_i_4[j], fabs(rho_i_4[j] - var_rho_analitical(t_i[j])));
 		}
 
 		runge_kutta(n_step, n_step_store, t_step, step_store, rho_i, rho_i_4, t_i, rho_der);
 		
+		printf("Results with derivative independent of time and variable gas density\n");
+		printf("  time   |   rho_2   |  |error|  |   rho_4   |  |error| \n");
 		for (j = 0; j < n_step_store; j++) {
-			printf("Rho at time %lf: %lf\n", t_i[j], rho_i[j]);
+			printf("%8.6lf | %9.6lf | %9.3e | %9.6lf | %9.3e\n", t_i[j], rho_i[j], fabs(rho_i[j] - coupled_rho_analitical(t_i[j])), rho_i_4[j], fabs(rho_i_4[j] - coupled_rho_analitical(t_i[j])));
 		}
 
 		runge_kutta(n_step, n_step_store, t_step, step_store, rho_i, rho_i_4, t_i, var_rho_der);
 		
+		printf("Results with derivative proportional to time and variable gas density\n");
+		printf("  time   |   rho_2   |  |error|  |   rho_4   |  |error| \n");
 		for (j = 0; j < n_step_store; j++) {
-			printf("Rho at time %lf: %lf\n", t_i[j], rho_i[j]);
+			printf("%8.6lf | %9.6lf | %9.3e | %9.6lf | %9.3e\n", t_i[j], rho_i[j], fabs(rho_i[j] - coupled_var_rho_analitical(t_i[j])), rho_i_4[j], fabs(rho_i_4[j] - coupled_var_rho_analitical(t_i[j])));
 		}
 
 		free(t_i);
@@ -76,6 +86,14 @@ double rho_analitical(double t) {
 
 double var_rho_analitical(double t) {
 	return c_s * rho_g_i / t_g * pow(t, 2.) / 2.;
+}
+
+double coupled_rho_analitical(double t) {
+	return rho_g_i *(1. - exp(-c_s/t_g * t));
+}
+
+double coupled_var_rho_analitical(double t) {
+	return rho_g_i *(1. - exp(-c_s/(2. * t_g) * pow(t, 2.)));
 }
 
 void runge_kutta(int n_step_1, int n_step_store_1, double step, double step_store_1, double *p, double *p_4, double *time, double (*f) (double, double)) {
