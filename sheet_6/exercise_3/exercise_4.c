@@ -45,4 +45,3 @@ int i, j, equiv = 1;
 
     return equiv;
 }
-
