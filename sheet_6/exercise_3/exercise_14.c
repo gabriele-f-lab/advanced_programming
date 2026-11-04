@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #define MAXLINES 5000 /* max #lines to be sorted */
 #define ALLOCSIZE 10000 /* size of available space */
@@ -9,60 +10,39 @@ static char allocbuf[ALLOCSIZE]; /* storage for alloc */
 static char *allocp = allocbuf;  /* next free position */
 char *lineptr[MAXLINES]; /* pointers to text lines */
 
+int numeric = 1, reverse = 1;
 int readlines(char *lineptr[], int nlines);
 void writelines(char *lineptr[], int nlines);
 int getline2(char *line, int max);
 void qsort2(void *lineptr[], int left, int right, int (*comp) (void *, void *)); /*here is where a pointer to a function, "(*comp)(void *, void *)" is used */
-void qsort2_r(void *v[], int left, int right, int (*comp)(void *, void *));
+int strcmp2(void *v1, void *v2);
 int numcmp(char *, char *);
 char *alloc(int n);
 
 /* sort input lines */
 int main(int argc, char *argv[]) {
     int nlines; /* number of input lines read */
-    int numeric = 0, reverse = 0; /* 1 if numeric sort */
+    int c; /* 1 if numeric sort */
 
     if (argc > 1) {
-        switch (argc) {
-            case 2:
-                if (argv[1][0] == '-' && argv[1][2] == '\0')
-                    switch (argv[1][1]) {
-                        case 'n':
-                            numeric = 1;
-                            break;
-                        case 'r':
-                            reverse = 1;
-                            break;
-                        default:
-                            printf("Wrong argument: insert '-n' or '-r'\n");
-                            return 1;
-                    }
-                else {
-                    printf("Wrong argument: insert '-n' or '-r'\n");
-                    return 1;
-                }
-                
-                break;
-
-            case 3:
-                if((strcmp(argv[1], "-n") == 0 && strcmp(argv[2], "-r") == 0) || ((strcmp(argv[1], "-r") == 0 && strcmp(argv[2], "-n") == 0)))
-                    numeric = reverse = 1;
-                else {
-                    printf("Wrong arguments\n");
-                    return 1;
-                } 
-
-                break;
-
-            default:
-                printf("Too many arguments\n");
-                return 1;
+        while (--argc > 0 && (*++argv)[0] == '-')  /* note the increment of the pointer after "-" is found */
+        while (c = *++argv[0])                 /* ...and after each character is parsed */
+    switch (c)     /* here you have a very common use of the command "switch" */
+        {
+        case 'r':
+            reverse = -1;
+            break;
+        case 'n':
+            numeric = -1;
+            break;
+        default:
+            printf("find: illegal option %c\n", c);
+            return 1;
         }
     }
 
     if ((nlines = readlines(lineptr, MAXLINES)) >= 0) {
-        if (reverse == 0) qsort2((void **) lineptr, 0, nlines-1, (numeric ? (int (*)(void*, void*))numcmp : (int (*)(void*, void*))strcmp)); /* here is where the pointer to the correct function is passed */
-        if (reverse == 1) qsort2_r((void **) lineptr, 0, nlines-1, (numeric ? (int (*)(void*, void*))numcmp : (int (*)(void*, void*))strcmp));
+        qsort2((void **) lineptr, 0, nlines-1, (numeric == -1 ? (int (*)(void*, void*))numcmp : (int (*)(void*, void*))strcmp2)); /* here is where the pointer to the correct function is passed */
         writelines(lineptr, nlines);
         return 0;
     }
@@ -89,22 +69,22 @@ void qsort2(void *v[], int left, int right, int (*comp)(void *, void *)) {
     qsort2(v, last+1, right, comp);
 } 
 
-/* qsort2r: sort v[left] •..v[right] into decreasing order */
-void qsort2_r(void *v[], int left, int right, int (*comp)(void *, void *)) {
-    int i, last;
-    void swap(void *v[], int, int);
+int strcmp2(void *v1, void *v2) {
+    int i = 0;
+    char *s = (char *)v1;
+    char *t = (char *)v2;
 
-    if (left >= right)  /* do nothing if array contains */
-        return;         /* fewer than two elements */
-    swap(v, left, (left + right)/2);
-    last = left;
-    for (i = left+1; i <= right; i++)
-        if ((*comp)(v[left], v[i]) < 0)   /* here the appropriate function is called. */
-            swap(v, ++last, i);           /* so no need to write two DIFFERENT versions of qsort2 */
-    swap(v, left, last);
-    qsort2_r(v, left, last-1, comp);
-    qsort2_r(v, last+1, right, comp);
-} 
+    while (i < ALLOCSIZE) {
+        if (s[i] != t[i])
+            break;
+        else
+            if (s[i] == '\0')
+                return 0;
+        i++;
+    }
+
+    return (s[i] - t[i]) * reverse;
+}
 
 /* numcmp: compare s1 and s2 numerically */
 int numcmp(char *s1, char *s2) {
@@ -112,9 +92,9 @@ int numcmp(char *s1, char *s2) {
         v1 = atof(s1);
         v2 = atof(s2);
         if (v1 < v2)
-            return -1;
+            return -1*reverse;
         else if (v1 > v2)
-            return 1;
+            return 1*reverse;
         else
             return 0;
 }
