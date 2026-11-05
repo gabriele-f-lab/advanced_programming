@@ -80,8 +80,8 @@ int strcmp2(char *s, char *t) {
 
     while (i < ALLOCSIZE && j < ALLOCSIZE) {
         if (dir == -1) {
-            while (!isdigit(s[i]) && !isalpha(s[i]) && s[i] != ' ' && s[i] != '\0') i++;
-            while (!isdigit(t[j]) && !isalpha(t[j]) && t[j] != ' ' && t[j] != '\0') j++;
+            while (!isalnum(s[i]) && !isblank(s[j]) && s[i] != '\0') i++;
+            while (!isalnum(t[j]) && !isblank(t[j]) && t[j] != '\0') j++;
         }
         if (fold == 1) {
             if (s[i] != t[j])
