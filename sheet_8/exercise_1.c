@@ -11,16 +11,17 @@ double coupled_var_rho_analitical(double t);
 void runge_kutta(int n_step_1, int n_step_store_1, double step, double step_store_1, double *p, double *p_4, double *time, double (*f) (double, double));
 void runge_kutta_g_const(int n_step_1, int n_step_store_1, double step, double step_store_1, double *p, double *p_4, double *time, double (*f) (double, double));
 
-double c_s = 0.02, rho_g_i = 10., t_g = 1.5;
+double c_s = 0.02, rho_g_i = 10., t_g = 1.5, half_step;
 
 int main(int argc, char *argv[]) {
-	if (argc == 3) {
+	if (argc > 2) {
 		int n_step, j, n_step_store;
 		double t_max, t_step, *rho_i, *rho_i_4, *t_i, step_store = 0.2;
 
 		t_step = (double) atof(argv[1]);
 		t_max = (double) atof(argv[2]);
 
+        half_step = t_step / 2.;
 		n_step = (int) floor(t_max / t_step);
 		n_step_store = (int) floor(t_max / step_store);
 		
@@ -111,7 +112,7 @@ void runge_kutta(int n_step_1, int n_step_store_1, double step, double step_stor
 		rho_g_4 -= 1./6. * (k_1 + k_4) + 1./3. * (k_2 + k_3);
 		t += step;
 
-		if (t >= (step_store_1 * ((double) j + 1) - 0.01) && j < n_step_store_1) {
+		if (t >= (step_store_1 * ((double) j + 1.) - half_step) && j < n_step_store_1) {
 			p[j] = rho;
 			p_4[j] = rho_4;
 			time[j] = t;
@@ -132,7 +133,7 @@ void runge_kutta_g_const(int n_step_1, int n_step_store_1, double step, double s
 		rho_4 += 1./6. * (k_1 + k_4) + 2./3. * k_2;
 		t += step;
 
-		if (t >= (step_store_1 * ((double) j + 1) - 0.01) && j < n_step_store_1) {
+		if (t >= (step_store_1 * ((double) j + 1.) - half_step) && j < n_step_store_1) {
 			p[j] = rho;
 			p_4[j] = rho_4;
 			time[j] = t;

@@ -1,8 +1,8 @@
 #include <stdio.h>
 
-#define maxch 100000
+#define maxch 1000000
 
-int uncomment(void);
+void uncomment(void);
 
 int main() {
     uncomment();
@@ -10,91 +10,130 @@ int main() {
     return 0;
 }
 
-int uncomment (void) {
-    char c, text[maxch];
-    int i = 0, j = 0, cont, cont_row, ins_str = 0, ins_str2 = 0;
+void uncomment (void) {
+    int c, next, old, cont, cont_row, br_cont;
 
-    while ((c = getchar()) && c != EOF) {
-        text[i] = c;
-        if (i+1 > maxch) {
-            printf("File too big\n");
-            return 1;
-        }
-        i++;
-    }
+    c = getchar();
+    next = getchar();
+    ungetc(next, stdin);
 
-    while (j < i && text[j] != EOF) {
-        while (j<i-1 && text[j] != EOF && (text[j] != '/' && text[j+1] != '/') && (text[j] != '/' && text[j+1] != '*') && text[j] != '\'' && text[j] != '"') {
-            putchar(text[j]);
-            j++;
+    while (c!= EOF) {
+        while (c != EOF && (c != '/' && next != '/') && (c != '/' && next != '*') && c != '\'' && c != '"') {
+            putchar(c);
+            old = c;
+            c = getchar();
+            next = getchar();
+            ungetc(next, stdin);
         }
-        switch (text[j]) {
+        if (c == EOF)
+            break;
+        switch (c) {
             case '\'':
-                putchar(text[j]);
-                j++;
-                while (j<i-1 && text[j] != EOF) {
-                    if(text[j] == '\'' && text[j-1] != '\\')
+                putchar(c);
+                old = c;
+                c = getchar();
+                next = getchar();
+                ungetc(next, stdin);
+                while (c != EOF) {
+                    if(c == '\'' && old != '\\')
                         break;
-                    putchar(text[j]);
-                    j++;
+                    putchar(c);
+                    old = c;
+                    c = getchar();
+                    next = getchar();
+                    ungetc(next, stdin);
                 }
-                putchar(text[j]);
-                j++;
+                putchar(c);
+                old = c;
+                c = getchar();
+                next = getchar();
+                ungetc(next, stdin);
                 break;
             case '"':
-                putchar(text[j]);
-                j++;
-                while (j<i-1 && text[j] != EOF) {
-                    if(text[j] == '"' && text[j-1] != '\\')
+                br_cont = 0;
+                putchar(c);
+                old = c;
+                c = getchar();
+                next = getchar();
+                ungetc(next, stdin);
+                while (c != EOF) {
+                    if(c == '"' && br_cont%2 == 0)
                         break;
-                    putchar(text[j]);
-                    j++;
+                    if(c == '\\') 
+                        br_cont++;
+                    else
+                        br_cont = 0;
+                    putchar(c);
+                    old = c;
+                    c = getchar();
+                    next = getchar();
+                    ungetc(next, stdin);
                 }
-                putchar(text[j]);
-                j++;
+                putchar(c);
+                old = c;
+                c = getchar();
+                next = getchar();
+                ungetc(next, stdin);
                 break;
             default:
-                if (text[j] == '/' && text[j+1] == '/') {
+                if (c == '/' && next == '/') {
                     cont = 0;
-                    while (j<i && text[j] != EOF && text[j]) {
-                        if (text[j] == '\n') {
-                            putchar(text[j]);
-                            j++;
+                    while (c != EOF) {
+                        if (c == '\n') {
+                            putchar(c);
+                            old = c;
+                            c = getchar();
+                            next = getchar();
+                            ungetc(next, stdin);
                             break;
                         }
-                        j++;
+                        old = c;
+                        c = getchar();
+                        next = getchar();
+                        ungetc(next, stdin);
                     }
                 }
-                else if (text[j] == '/' && text[j+1] == '*') {
+                else if (c == '/' && next == '*') {
                     cont = 0;
                     cont_row = 0;
-                    ins_str = 0;
-                    ins_str2 = 0;
-                    while (j<i && text[j] != EOF) {
-                        if (text[j-1] == '\n')
+                    while (c != EOF) {
+                        if (old == '\n')
                             cont = 2;
-                        if (text[j] == '\n')
+                        if (c == '\n')
                             cont_row++;
-                        if (text[j] == '\'')
-                            ins_str = ins_str == 0 ? 1 : 0;
-                        if (text[j] == '"')
-                            ins_str2 = ins_str2 == 0 ? 1 : 0;
-                        if (text[j] == '*' && text[j+1] == '/' && ins_str == 0 && ins_str2 == 0) {
-                            j += 2;
-                            if (j<i && text[j] == '\n' && cont_row != 0)
-                                j++;
+                        if (c == '*' && next == '/') {
+                            old = c;
+                            c = getchar();
+                            next = getchar();
+                            ungetc(next, stdin);
+                            old = c;
+                            c = getchar();
+                            next = getchar();
+                            ungetc(next, stdin);
+                            if (c == '\n' && cont_row != 0) {
+                                old = c;
+                                c = getchar();
+                                next = getchar();
+                                ungetc(next, stdin);
+                            }
                             break;
                         }
-                        if (text[j] == '\n') {
+                        if (c == '\n') {
                             cont++;
                             if (cont <= 1)
-                                putchar(text[j]);
+                                putchar(c);
                         }
-                        j++;
+                        old = c;
+                        c = getchar();
+                        next = getchar();
+                        ungetc(next, stdin);
                     }
                 } else {
-                    putchar(text[j]);
-                    j++;
+                    putchar(c);
+                    old = c;
+                    c = getchar();
+                    next = getchar();
+                    ungetc(next, stdin);
                 }
                 break;
         }
