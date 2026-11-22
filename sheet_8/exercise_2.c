@@ -135,7 +135,7 @@ double a_der(double t, double a) {
 
 void runge_kutta(int n_step_1, int n_step_store_1, double step, double step_store_1, double *p, double *time, double (*f) (double, double)) {
 	double t = 0., k_1, k_2, a = 1e-3;
-	int j = 0;
+	int j = 1;
 
     p[j] = a;
     time[j] = t;
