@@ -5,21 +5,22 @@
 
 #define N_GRID 340
 
-int x_right = 5, x_left = 55;
+int x_left = 5, x_right = 55;
 double vel = 5., half_step;
 
 void initialize_grid (double *p);
 void exact_s(int n_step_store_1, double step_store_1, double t_max_1, double *p, FILE *f);
-void ftcs   (int n_step_1, int n_step_store_1, double step, double step_store_1, double *p, FILE *f);
-void lax    (int n_step_1, int n_step_store_1, double step, double step_store_1, double *p, FILE *f);
-void upwind1(int n_step_1, int n_step_store_1, double step, double step_store_1, double *p, FILE *f);
-void upwind2(int n_step_1, int n_step_store_1, double step, double step_store_1, double *p, FILE *f);
-void lax_w  (int n_step_1, int n_step_store_1, double step, double step_store_1, double *p, FILE *f);
+void ftcs   (int n_step_1, int n_step_store_1, double step, double step_store_1, double *p, FILE *f, FILE *g);
+void lax    (int n_step_1, int n_step_store_1, double step, double step_store_1, double *p, FILE *f, FILE *g);
+void upwind1(int n_step_1, int n_step_store_1, double step, double step_store_1, double *p, FILE *f, FILE *g);
+void upwind2(int n_step_1, int n_step_store_1, double step, double step_store_1, double *p, FILE *f, FILE *g);
+void lax_w  (int n_step_1, int n_step_store_1, double step, double step_store_1, double *p, FILE *f, FILE *g);
+double errors (double *vec);
 
 int main (int argc, char *argv[]) {
     double x[N_GRID], t_step = 0.04, t_step_store = 0.2, t_max = 25.;
     int n_step, n_step_store, run[5], i = 1, j, k, read = 0, check_values[3], tot = 0, n_int_plot = 4, plot_ratio;
-    FILE *fp;
+    FILE *fp, *gp;
     char str[100] = "", c;
 
     for (int s = 0; s < 5; s++) run[s] = 0;
@@ -99,6 +100,7 @@ int main (int argc, char *argv[]) {
 
     half_step = t_step / 2.;
     fp = fopen("output.txt", "w");
+    gp = fopen("errors.txt", "w");
 
     initialize_grid(x);
 
@@ -109,11 +111,11 @@ int main (int argc, char *argv[]) {
     fprintf(fp, "%d\n", plot_ratio);
 
     exact_s (n_step_store, t_step_store, t_max, x, fp);
-    if (run[0] == 1) ftcs   (n_step, n_step_store, t_step, t_step_store, x, fp);
-    if (run[1] == 1) lax    (n_step, n_step_store, t_step, t_step_store, x, fp);
-    if (run[2] == 1) upwind1(n_step, n_step_store, t_step, t_step_store, x, fp);
-    if (run[3] == 1) upwind2(n_step, n_step_store, t_step, t_step_store, x, fp);
-    if (run[4] == 1) lax_w  (n_step, n_step_store, t_step, t_step_store, x, fp);
+    if (run[0] == 1) ftcs   (n_step, n_step_store, t_step, t_step_store, x, fp, gp);
+    if (run[1] == 1) lax    (n_step, n_step_store, t_step, t_step_store, x, fp, gp);
+    if (run[2] == 1) upwind1(n_step, n_step_store, t_step, t_step_store, x, fp, gp);
+    if (run[3] == 1) upwind2(n_step, n_step_store, t_step, t_step_store, x, fp, gp);
+    if (run[4] == 1) lax_w  (n_step, n_step_store, t_step, t_step_store, x, fp, gp);
 
     fprintf(fp, "end\n");
 
@@ -124,7 +126,7 @@ int main (int argc, char *argv[]) {
 
 void initialize_grid (double *p) {
     for (int i = 0; i < N_GRID; i++)
-        p[i] = (i >= x_right && i <= x_left) ? 1. : 0.;
+        p[i] = (i >= x_left && i <= x_right) ? 1. : 0.;
 }
 
 void exact_s(int n_step_store_1, double step_store_1, double t_max_1, double *p, FILE *f) {
@@ -136,7 +138,7 @@ void exact_s(int n_step_store_1, double step_store_1, double t_max_1, double *p,
         t = step_store_1 * ((double) j);
         fprintf(f, "%lf\n", t);
         for (int k = 0; k < N_GRID; k++) {
-            val = (k >= x_right + t * vel && k <= x_left + t * vel) ? 1. : 0.;
+            val = (k >= x_left + t * vel && k <= x_right + t * vel) ? 1. : 0.;
             fprintf(f, " %lf ", val);
         }
         fprintf(f, "\n");
@@ -144,18 +146,19 @@ void exact_s(int n_step_store_1, double step_store_1, double t_max_1, double *p,
     if (t < t_max_1) {
         fprintf(f, "%lf\n", t_max_1);
         for (int k = 0; k < N_GRID; k++) {
-            val = (k >= x_right + t_max_1 * vel && k <= x_left + t_max_1 * vel) ? 1. : 0.;
+            val = (k >= x_left + t_max_1 * vel && k <= x_right + t_max_1 * vel) ? 1. : 0.;
             fprintf(f, " %lf ", val);
         }
         fprintf(f, "\n");
     }
 }
 
-void ftcs(int n_step_1, int n_step_store_1, double step, double step_store_1, double *p, FILE *f) {
-	double t = 0., p_temp[N_GRID], p_temp_1[N_GRID], c = vel * step;
+void ftcs(int n_step_1, int n_step_store_1, double step, double step_store_1, double *p, FILE *f, FILE *g) {
+	double t = 0., p_temp[N_GRID], p_temp_1[N_GRID], c = vel * step, e;
 	int j = 1, last = 0;
 
     fprintf(f, "ftcs\n");
+    fprintf(g, "ftcs\n");
 
     fprintf(f, "%lf\n", t);
     for (int k = 0; k < N_GRID; k++) {
@@ -178,6 +181,8 @@ void ftcs(int n_step_1, int n_step_store_1, double step, double step_store_1, do
             for (int k = 0; k < N_GRID; k++) {
                 fprintf(f, " %lf ", p_temp[k]);
             }
+            e = errors (p_temp);
+            fprintf(g, "%lf %lf\n", t, e);
             fprintf(f, "\n");
 			j++;
             last = 1;
@@ -194,11 +199,12 @@ void ftcs(int n_step_1, int n_step_store_1, double step, double step_store_1, do
     }
 }
 
-void lax(int n_step_1, int n_step_store_1, double step, double step_store_1, double *p, FILE *f) {
-	double t = 0., p_temp[N_GRID], p_temp_1[N_GRID], c = vel * step;
+void lax(int n_step_1, int n_step_store_1, double step, double step_store_1, double *p, FILE *f, FILE *g) {
+	double t = 0., p_temp[N_GRID], p_temp_1[N_GRID], c = vel * step, e;
 	int j = 1, last = 0;
 
     fprintf(f, "lax\n");
+    fprintf(g, "lax\n");
 
     fprintf(f, "%lf\n", t);
     for (int k = 0; k < N_GRID; k++) {
@@ -221,6 +227,8 @@ void lax(int n_step_1, int n_step_store_1, double step, double step_store_1, dou
             for (int k = 0; k < N_GRID; k++) {
                 fprintf(f, " %lf ", p_temp[k]);
             }
+            e = errors (p_temp);
+            fprintf(g, "%lf %lf\n", t, e);
             fprintf(f, "\n");
 			j++;
             last = 1;
@@ -237,11 +245,12 @@ void lax(int n_step_1, int n_step_store_1, double step, double step_store_1, dou
     }
 }
 
-void upwind1(int n_step_1, int n_step_store_1, double step, double step_store_1, double *p, FILE *f) {
-	double t = 0., p_temp[N_GRID], p_temp_1[N_GRID], c = vel * step;
+void upwind1(int n_step_1, int n_step_store_1, double step, double step_store_1, double *p, FILE *f, FILE *g) {
+	double t = 0., p_temp[N_GRID], p_temp_1[N_GRID], c = vel * step, e;
 	int j = 1, last = 0;
 
     fprintf(f, "upwind1\n");
+    fprintf(g, "upwind1\n");
 
     fprintf(f, "%lf\n", t);
     for (int k = 0; k < N_GRID; k++) {
@@ -264,6 +273,8 @@ void upwind1(int n_step_1, int n_step_store_1, double step, double step_store_1,
             for (int k = 0; k < N_GRID; k++) {
                 fprintf(f, " %lf ", p_temp[k]);
             }
+            e = errors (p_temp);
+            fprintf(g, "%lf %lf\n", t, e);
             fprintf(f, "\n");
 			j++;
             last = 1;
@@ -280,11 +291,12 @@ void upwind1(int n_step_1, int n_step_store_1, double step, double step_store_1,
     }
 }
 
-void upwind2(int n_step_1, int n_step_store_1, double step, double step_store_1, double *p, FILE *f) {
-	double t = 0., p_temp[N_GRID], p_temp_1[N_GRID], c = vel * step;
+void upwind2(int n_step_1, int n_step_store_1, double step, double step_store_1, double *p, FILE *f, FILE *g) {
+	double t = 0., p_temp[N_GRID], p_temp_1[N_GRID], c = vel * step, e;
 	int j = 1, last = 0;
 
     fprintf(f, "upwind2\n");
+    fprintf(g, "upwind2\n");
 
     fprintf(f, "%lf\n", t);
     for (int k = 0; k < N_GRID; k++) {
@@ -309,6 +321,8 @@ void upwind2(int n_step_1, int n_step_store_1, double step, double step_store_1,
             for (int k = 0; k < N_GRID; k++) {
                 fprintf(f, " %lf ", p_temp[k]);
             }
+            e = errors (p_temp);
+            fprintf(g, "%lf %lf\n", t, e);
             last = 1;
             fprintf(f, "\n");
 			j++;
@@ -325,11 +339,12 @@ void upwind2(int n_step_1, int n_step_store_1, double step, double step_store_1,
     }
 }
 
-void lax_w(int n_step_1, int n_step_store_1, double step, double step_store_1, double *p, FILE *f) {
-	double t = 0., p_temp[N_GRID], p_temp_1[N_GRID], c = vel * step;
+void lax_w(int n_step_1, int n_step_store_1, double step, double step_store_1, double *p, FILE *f, FILE *g) {
+	double t = 0., p_temp[N_GRID], p_temp_1[N_GRID], c = vel * step, e;
 	int j = 1, last = 0;
 
     fprintf(f, "lax_w\n");
+    fprintf(g, "lax_w\n");
 
     fprintf(f, "%lf\n", t);
     for (int k = 0; k < N_GRID; k++) {
@@ -352,6 +367,8 @@ void lax_w(int n_step_1, int n_step_store_1, double step, double step_store_1, d
             for (int k = 0; k < N_GRID; k++) {
                 fprintf(f, " %lf ", p_temp[k]);
             }
+            e = errors (p_temp);
+            fprintf(g, "%lf %lf\n", t, e);
             fprintf(f, "\n");
 			j++;
             last = 1;
@@ -366,4 +383,14 @@ void lax_w(int n_step_1, int n_step_store_1, double step, double step_store_1, d
         }
         fprintf(f, "\n");
     }
+}
+
+double errors (double *vec) {
+    double err = 0;
+
+    for (int k = 0; k < N_GRID; k++) {
+        err += fabs(vec[k]);
+    }
+
+    return err;
 }
